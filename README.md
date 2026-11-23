@@ -1,6 +1,6 @@
 # WoW Forever auction feed
 
-Hourly public EU and US auction summaries collected directly from Blizzard's Battle.net Game Data API by this repository's GitHub Actions runner. Read [EU prices](https://prismicious.github.io/forever-auction-feed/eu.json) or [US prices](https://prismicious.github.io/forever-auction-feed/us.json). Each house carries its source timestamp. An hourly schedule can run late. A failed collection leaves the previous deployment online.
+Hourly public EU PvP Horde auction summaries (house 113) collected directly from Blizzard's Battle.net Game Data API by this repository's GitHub Actions runner. Read [EU PvP Horde prices](https://prismicious.github.io/forever-auction-feed/eu.json). Each house carries its source timestamp. An hourly schedule can run late. A failed collection leaves the previous deployment online.
 
 The collector and pricing formulas are adapted from [ForeverPrices by Miaphys](https://github.com/Miaphys/ForeverPrices/tree/35a776002b15e8d769d6722805db0c51ebc9b188), under the included MIT license. Blizzard supplies the listings. This independent publication is operated by prismicious.
 
