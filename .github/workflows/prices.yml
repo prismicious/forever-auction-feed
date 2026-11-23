@@ -1,0 +1,35 @@
+name: Publish auction prices
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '39 * * * *'
+permissions:
+  contents: read
+concurrency:
+  group: auction-pages
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Collect from Blizzard
+        env:
+          BNET_ID: ${{ secrets.BNET_ID }}
+          BNET_SECRET: ${{ secrets.BNET_SECRET }}
+        run: python3 -B publish.py
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - uses: actions/deploy-pages@v4
+        id: deploy
