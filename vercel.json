@@ -9,7 +9,7 @@
   },
   "schedules": {
     "refresh-auction-feed": {
-      "schedule": "17 * * * *",
+      "schedule": "30 * * * *",
       "timezone": "UTC",
       "path": "/api/refresh"
     }
