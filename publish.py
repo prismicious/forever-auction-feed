@@ -25,9 +25,10 @@ def previous(region):
     return data["houses"]
 
 
-def scan(region):
+def scan(region, *, previous_houses=None):
     api = Blizzard(region)
-    previous_houses = previous(region)
+    if previous_houses is None:
+        previous_houses = previous(region)
     base = "/data/wow/ruleset/1/auctions/"
     house_id = "113"
     house = previous_houses.get(house_id, {})

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": ["fra1"],
+  "functions": {
+    "api/refresh.py": {
+      "maxDuration": 300,
+      "excludeFiles": "{.env*,.github/**}"
+    }
+  },
+  "schedules": {
+    "refresh-auction-feed": {
+      "schedule": "17 * * * *",
+      "timezone": "UTC",
+      "path": "/api/refresh"
+    }
+  }
+}
