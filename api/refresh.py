@@ -5,6 +5,7 @@ import json
 import os
 import time
 from http.server import BaseHTTPRequestHandler
+from copy import deepcopy
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
@@ -76,6 +77,8 @@ def refresh():
     url = f'{os.environ["AUCTION_BLOB_BASE"].rstrip("/")}/{BLOB_PATH}'
     old, etag = read_snapshot(url)
     history, history_etag = read_history(url.replace(BLOB_PATH, HISTORY_PATH))
+    published_houses = deepcopy(old["houses"]) if old is not None else None
+    original_history = deepcopy(history)
     now = int(time.time())
     if (not history["scans"] and old is not None
             and now - 30 * 86400 < old["houses"]["113"]["updated"] <= now):
@@ -85,9 +88,15 @@ def refresh():
     snapshot = scan("eu", previous_houses=houses)
     now = snapshot["generated"]
     update(history, snapshot, now)
+    if history == original_history and snapshot["houses"] == published_houses:
+        # Re-invoking a completed source scan is a read-only success. In
+        # particular, do not rewrite identical history through a cached ETag.
+        return {"url": url, "generated": old["generated"],
+                "updated": snapshot["houses"]["113"]["updated"], "unchanged": True}
     # Commit history before advertising its means. Both objects use conditional
     # writes: a concurrent invocation cannot overwrite a newer observation.
-    put_snapshot(history, history_etag, token, history=True)
+    if history != original_history:
+        put_snapshot(history, history_etag, token, history=True)
     published = put_snapshot(snapshot, etag, token)
     return {
         "url": published,

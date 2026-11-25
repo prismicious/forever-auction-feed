@@ -1,5 +1,6 @@
 import copy
 import unittest
+from urllib.error import HTTPError
 from unittest.mock import patch
 
 import history
@@ -13,6 +14,30 @@ def snapshot(at, price=100, listed=True):
 
 
 class HistoryTests(unittest.TestCase):
+    def test_repeated_completed_scan_is_successful_without_any_blob_write(self):
+        state = history.empty(); old = snapshot(10000, 100)
+        history.update(state, old, 10000)
+        with patch.dict(publisher.os.environ, {"BLOB_READ_WRITE_TOKEN": "test", "AUCTION_BLOB_BASE": "https://example.invalid"}), \
+                patch.object(publisher, "read_snapshot", return_value=(old, "price-etag")), \
+                patch.object(publisher, "read_history", return_value=(state, "history-etag")), \
+                patch.object(publisher, "scan", return_value=copy.deepcopy(old)), \
+                patch.object(publisher.time, "time", return_value=10001), \
+                patch.object(publisher, "put_snapshot") as put:
+            self.assertTrue(publisher.refresh()["unchanged"])
+            put.assert_not_called()
+
+    def test_history_conflict_preserves_public_summary(self):
+        with patch.dict(publisher.os.environ, {"BLOB_READ_WRITE_TOKEN": "test", "AUCTION_BLOB_BASE": "https://example.invalid"}), \
+                patch.object(publisher, "read_snapshot", return_value=(None, None)), \
+                patch.object(publisher, "read_history", return_value=(history.empty(), None)), \
+                patch.object(publisher, "previous", return_value={}), \
+                patch.object(publisher, "scan", return_value=snapshot(10000)), \
+                patch.object(publisher.time, "time", return_value=10001), \
+                patch.object(publisher, "put_snapshot", side_effect=HTTPError("test", 412, "conflict", {}, None)) as put:
+            with self.assertRaises(HTTPError): publisher.refresh()
+            self.assertEqual(put.call_count, 1)
+            self.assertEqual(put.call_args.kwargs, {"history": True})
+
     def test_exact_trailing_windows_and_boundaries(self):
         day = history.DAY
         now = 100 * day
