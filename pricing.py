@@ -9,7 +9,7 @@ import urllib.request
 MARKET_SHARE = 0.25
 OUTLIER_FACTOR = 1.5
 AVG_ALPHA = 2 / 73
-FORGET_AFTER = 14 * 86400
+FORGET_AFTER = 30 * 86400
 
 class Blizzard:
     def __init__(self, region: str):
